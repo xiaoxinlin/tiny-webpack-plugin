@@ -1,0 +1,17 @@
+{
+  "name": "study-tinyimg-plugin",
+  "version": "1.0.0",
+  "description": "sxc study project",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "chalk": "^4.1.0",
+    "figures": "^3.2.0",
+    "ora": "^5.4.0"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "author": "sxc",
+  "license": "ISC"
+}
