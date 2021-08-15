@@ -6,16 +6,41 @@ const Url = require('url');
 const Chalk = require('chalk'); // 终端字符串样式库
 const Figures = require('figures'); // Unicode字体图标库
 const Ora = require('ora'); // 终端loading库
+const { validate } = require('schema-utils'); // schema验证方法
 
-module.exports = class TinyimgWebpackPlugin {
+module.exports = class TinyImgWebpackPlugin {
   // 在构造函数中获取用户给该插件传入的配置
   constructor(opts) {
+    /*
+     *opts配置：
+     * enabled：Boolean，是否开启图片压缩
+     * logged：Boolean，是否输出日志
+     */
     this.opts = opts;
   }
   // Webpack 会调用 TinyimgWebpackPlugin 实例的 apply 方法，给插件实例传入 compiler 对象
   apply(compiler) {
     // 在emit阶段插入钩子函数，用于特定时机处理额外的逻辑；
-    compiler.hooks.emit.tap(PLUGIN_NAME, (compilation) => {});
+    // emit是个asyncHook，异步钩子
+    // 支持tap、tapPromise、tapAsync
+    compiler.hooks.emit.tap(PLUGIN_NAME, (compilation) => {
+      const { enabled, logged } = this.opts;
+      // 使用schema校验参数
+      validate(Schema, this.opts, { name: PLUGIN_NAME });
+      // compilation对象是webpack plugin构建的核心
+      enabled &&
+        compiler.hooks.emit.tapPromise(PLUGIN_NAME, (compilation) => {
+          // 从所有的资源文件中过滤出需要压缩的图片文件
+          const imgs = Object.keys(compilation.assets).filter((v) => IMG_REGEXP.test(v));
+          if (!imgs.length) return Promise.resolve();
+          const promises = imgs.map((v) => this.compressImg(compilation.assets, v));
+          const spinner = Ora('Image is compressing......').start();
+          return Promise.all(promises).then((res) => {
+            spinner.stop();
+            logged && res.forEach((v) => console.log(v));
+          });
+        });
+    });
   }
 
   // 伪造请求头，生成随机ip，避免请求数量限制
@@ -76,7 +101,7 @@ module.exports = class TinyimgWebpackPlugin {
     try {
       // 以二进制流方式 同步 读取图片文件
       const file = Fs.readFileSync(path, 'binary');
-      // 上传图片，获取响应对象obj
+      // 上传图片，获取接口响应对象obj
       const obj = await UploadImg(file);
       console.log(obj);
       // 下载图片，获取下载的图片文件流
@@ -95,6 +120,7 @@ module.exports = class TinyimgWebpackPlugin {
       const dpath = Path.join(dirPath, Path.basename(path));
       // 控制台输出结果
       const msg = `${Figures.tick} Compressed [${Chalk.yellowBright(path)}] completed: Old Size ${oldSize}, New Size ${newSize}, Optimization Ratio ${ratio}`;
+      // 同步写入文件到设置的地址中
       Fs.writeFileSync(dpath, data, 'binary');
       return Promise.resolve(msg);
     } catch (err) {
