@@ -1,12 +1,15 @@
-const { IMG_REGEXP, PLUGIN_NAME } = require('../util/getting');
+const { IMG_REGEXP, PLUGIN_NAME, TINYIMG_URL } = require('../utils/constant');
 const Fs = require('fs');
 const Https = require('https');
-const Path = require('path');
+// const Path = require('path');
 const Url = require('url');
 const Chalk = require('chalk'); // 终端字符串样式库
 const Figures = require('figures'); // Unicode字体图标库
 const Ora = require('ora'); // 终端loading库
 const { validate } = require('schema-utils'); // schema验证方法
+const { RawSource } = require('webpack-sources'); // 处理webpack文件对象
+const { RandomNumInt, ByteSize, RoundNum } = require('../utils/index');
+const Schema = require('./schema');
 
 module.exports = class TinyImgWebpackPlugin {
   // 在构造函数中获取用户给该插件传入的配置
@@ -23,28 +26,29 @@ module.exports = class TinyImgWebpackPlugin {
     // 在emit阶段插入钩子函数，用于特定时机处理额外的逻辑；
     // emit是个asyncHook，异步钩子
     // 支持tap、tapPromise、tapAsync
-    compiler.hooks.emit.tap(PLUGIN_NAME, (compilation) => {
-      const { enabled, logged } = this.opts;
-      // 使用schema校验参数
-      validate(Schema, this.opts, { name: PLUGIN_NAME });
-      // compilation对象是webpack plugin构建的核心
-      enabled &&
-        compiler.hooks.emit.tapPromise(PLUGIN_NAME, (compilation) => {
-          // 从所有的资源文件中过滤出需要压缩的图片文件
-          const imgs = Object.keys(compilation.assets).filter((v) => IMG_REGEXP.test(v));
-          if (!imgs.length) return Promise.resolve();
-          const promises = imgs.map((v) => this.compressImg(compilation.assets, v));
-          const spinner = Ora('Image is compressing......').start();
-          return Promise.all(promises).then((res) => {
-            spinner.stop();
-            logged && res.forEach((v) => console.log(v));
-          });
+    // tapPromise必须return一个Promise对象
+    // tapAsync会有个callback参数，需要手动执行
+    const { enabled, logged } = this.opts;
+    // 使用schema校验参数
+    validate(Schema, this.opts, { name: PLUGIN_NAME });
+    // compilation对象是webpack plugin构建的核心
+    enabled &&
+      compiler.hooks.emit.tapPromise(PLUGIN_NAME, (compilation) => {
+        console.log(333);
+        // 从所有的资源文件中过滤出需要压缩的图片文件
+        const imgs = Object.keys(compilation.assets).filter((v) => IMG_REGEXP.test(v));
+        if (!imgs.length) return Promise.resolve();
+        const promises = imgs.map((v) => this.compressImg(compilation.assets, v));
+        const spinner = Ora('Image is compressing......').start();
+        return Promise.all(promises).then((res) => {
+          spinner.stop();
+          logged && res.forEach((v) => console.log(v));
         });
-    });
+      });
   }
 
   // 伪造请求头，生成随机ip，避免请求数量限制
-  RandomHeader() {
+  randomHeader() {
     // 随机生成4位的ip
     const ip = new Array(4)
       .fill(0)
@@ -68,9 +72,9 @@ module.exports = class TinyImgWebpackPlugin {
   }
 
   // 上传图片方法
-  UploadImg(file) {
+  uploadImg(file) {
     // 生成http请求配置
-    const opts = RandomHeader();
+    const opts = this.randomHeader();
     return new Promise((resolve, reject) => {
       // 发起http请求
       // 发起请求，生成http.ClientRequest的可写流示例，用于处理请求事件、写入文件（传输）
@@ -97,15 +101,21 @@ module.exports = class TinyImgWebpackPlugin {
   }
 
   // 压缩图片代码
-  async CompressImg(path) {
+  async compressImg(assets, path) {
     try {
-      // 以二进制流方式 同步 读取图片文件
-      const file = Fs.readFileSync(path, 'binary');
+      // assets用于表示webpack编译的资源文件的
+      // 在assets对象中，key是文件的名加后缀，value是一个对象，里面包含source和size等属性（可枚举和不可枚举属性）
+      // 图片经过对应的loader（file-loader）处理后，在assets对象中会生成'[path][name].[ext]'这样格式的key，也可以配置使用hash加密
+      const file = assets[path].source();
       // 上传图片，获取接口响应对象obj
-      const obj = await UploadImg(file);
-      console.log(obj);
+      const obj = await this.uploadImg(file);
       // 下载图片，获取下载的图片文件流
-      const data = await DownloadImg(obj.output.url);
+      const data = await this.downloadImg(obj.output.url);
+      // RawSource，处理webpack文件对象的插件
+      // 官方解释是：A Source can be asked for source code, size, source map and hash.
+      // 应该是生成一个对象，里面包含文件源码、大小、资源映射和哈希值
+      assets[path] = new RawSource(Buffer.alloc(data.length, data, 'binary'));
+      // 测试一下返回结果
       Fs.writeFileSync('upload-res.txt', JSON.stringify(obj), 'utf8');
       // 原始文件大小
       const oldSize = Chalk.redBright(ByteSize(obj.input.size));
@@ -114,14 +124,14 @@ module.exports = class TinyImgWebpackPlugin {
       // 压缩率
       const ratio = Chalk.blueBright(RoundNum(1 - obj.output.ratio, 2, true));
       // 生成新的文件路径
-      let dirPath = 'img';
+      /* let dirPath = 'img';
       // 要确保文件夹存在，否则会报错
       !Fs.existsSync(dirPath) && Fs.mkdirSync(dirPath);
       const dpath = Path.join(dirPath, Path.basename(path));
+      // 同步写入文件到设置的地址中
+      Fs.writeFileSync(dpath, data, 'binary'); */
       // 控制台输出结果
       const msg = `${Figures.tick} Compressed [${Chalk.yellowBright(path)}] completed: Old Size ${oldSize}, New Size ${newSize}, Optimization Ratio ${ratio}`;
-      // 同步写入文件到设置的地址中
-      Fs.writeFileSync(dpath, data, 'binary');
       return Promise.resolve(msg);
     } catch (err) {
       const msg = `${Figures.cross} Compressed [${Chalk.yellowBright(path)}] failed: ${Chalk.redBright(err)}`;
@@ -130,7 +140,7 @@ module.exports = class TinyImgWebpackPlugin {
   }
 
   // 下载压缩后的图片
-  DownloadImg(url) {
+  downloadImg(url) {
     const opts = new Url.URL(url);
     return new Promise((resolve, reject) => {
       const req = Https.request(opts, (res) => {

@@ -1,6 +1,3 @@
-// 依次使用tinyjpg和tinypng两个域名
-const TINYIMG_URL = ['tinyjpg.com', 'tinypng.com'];
-
 // 创建范围内随机整数
 function RandomNumInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
@@ -23,6 +20,7 @@ function RoundNum(num = 0, dec = 2, per = false) {
 }
 
 module.exports = {
-  RandomHeader,
-  CompressImg,
+  RandomNumInt,
+  ByteSize,
+  RoundNum,
 };
