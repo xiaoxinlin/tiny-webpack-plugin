@@ -1,1 +1,1 @@
-{"input":{"size":108851,"type":"image/jpeg"},"output":{"size":89601,"type":"image/jpeg","width":1022,"height":677,"ratio":0.8232,"url":"https://tinyjpg.com/web/output/9ur12c8pr1ae3czr1jvdz6zndkb67846"}}
+{"input":{"size":108851,"type":"image/jpeg"},"output":{"size":89601,"type":"image/jpeg","width":1022,"height":677,"ratio":0.8232,"url":"https://tinypng.com/web/output/jqrcp0zn46qjjw3qg977fzxqvex5td2j"}}

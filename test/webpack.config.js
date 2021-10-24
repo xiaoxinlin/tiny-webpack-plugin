@@ -26,7 +26,7 @@ const LOADER_OPTS = {
     esModule: false,
     limit: 10240,
     name: '[name].[ext]',
-    outputPath: 'distimg'
+    outputPath: 'img'
   },
   minicss: { publicPath: '../' },
   sass: {
