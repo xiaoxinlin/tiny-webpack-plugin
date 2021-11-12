@@ -1,12 +1,22 @@
-tinyimg-webpack-plugin
-├─ src
-│ ├─ index.js -- 入口文件
-│ ├─ schema.json -- 参数校验
-├─ study -- 参考及学习文件
-├─ test -- 测试用例
-├─ util
-│ ├─ constant.js -- 常量集合
-│ ├─ index.js -- 处理函数集合
-├─ .gitignore
-├─ package.json
-├─ readme.md
+# tinyimg-webpack-plugin-no-key
+
+## 使用说明
+
+```bash
+npm install tinyimg-webpack-plugin-no-key -D
+```
+
+#### vue
+
+```js
+// vue.config.js
+const TinyimgWebpackPlugin = require('tinyimg-webpack-plugin-no-key')
+
+module.exports = {
+  // ....
+  configureWebpack: (config) => {
+    // ....
+    config.plugins.push(new TinyimgWebpackPlugin())
+  }
+}
+```

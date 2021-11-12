@@ -1,1 +1,0 @@
-{"input":{"size":108851,"type":"image/jpeg"},"output":{"size":89601,"type":"image/jpeg","width":1022,"height":677,"ratio":0.8232,"url":"https://tinypng.com/web/output/jqrcp0zn46qjjw3qg977fzxqvex5td2j"}}
