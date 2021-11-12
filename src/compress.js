@@ -103,6 +103,7 @@ async function useCache() {}
 // 压缩图片代码
 async function compressImg(assets, path) {
   try {
+    console.log('path--------', path)
     // assets用于表示webpack编译的资源文件的
     // 在assets对象中，key是文件的名加后缀，value是一个对象，里面包含source和size等属性（可枚举和不可枚举属性）
     // 图片经过对应的loader（file-loader）处理后，在assets对象中会生成'[path][name].[ext]'这样格式的key，也可以配置使用hash加密
@@ -137,7 +138,7 @@ async function compressImg(assets, path) {
     // 应该是生成一个对象，里面包含文件源码、大小、资源映射和哈希值
     assets[path] = new RawSource(Buffer.alloc(data.length, data, 'binary'))
     // 测试一下返回结果
-    Fs.writeFileSync('upload-res.txt', JSON.stringify(obj), 'utf8')
+    // Fs.writeFileSync('upload-res.txt', JSON.stringify(obj), 'utf8')
     // 原始文件大小
     const oldSize = Chalk.redBright(ByteSize(obj.input.size))
     // 压缩后文件大小

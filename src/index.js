@@ -28,7 +28,7 @@ module.exports = class TinyImgWebpackPlugin {
     enabled &&
       compiler.hooks.emit.tapPromise(PLUGIN_NAME, (compilation) => {
         const spinner = Ora('Image is compressing......').start()
-        return Compress(compilation).then((logs) => {
+        return Compress(compilation).then((logs = []) => {
           spinner.stop()
           logged && logs.forEach((v) => console.log(v))
         })
