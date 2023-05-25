@@ -1,16 +1,16 @@
-# tinyimg-webpack-plugin-no-key
+# @elin/tinyimg-webpack-plugin
 
 ## 使用说明
 
 ```bash
-npm install tinyimg-webpack-plugin-no-key -D
+npm install @elin/tinyimg-webpack-plugin -D
 ```
 
 #### vue
 
 ```js
 // vue.config.js
-const TinyimgWebpackPlugin = require('tinyimg-webpack-plugin-no-key')
+const TinyimgWebpackPlugin = require('@elin/tinyimg-webpack-plugin')
 
 module.exports = {
   // ....

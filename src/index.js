@@ -11,6 +11,7 @@ module.exports = class TinyImgWebpackPlugin {
      *opts配置：
      * enabled：Boolean，是否开启图片压缩
      * logged：Boolean，是否输出日志
+     * minSize: Number, 启用图片压缩最低限制
      */
     this.opts = opts
   }
@@ -21,14 +22,14 @@ module.exports = class TinyImgWebpackPlugin {
     // 支持tap、tapPromise、tapAsync
     // tapPromise必须return一个Promise对象
     // tapAsync会有个callback参数，需要手动执行
-    const { enabled = true, logged = true } = this.opts
+    const { enabled = true, logged = true, minSize = 8 * 1024 } = this.opts
     // 使用schema校验参数
     validate(Schema, this.opts, { name: PLUGIN_NAME })
     // compilation对象是webpack plugin构建的核心
     enabled &&
       compiler.hooks.emit.tapPromise(PLUGIN_NAME, (compilation) => {
         const spinner = Ora('Image is compressing......').start()
-        return Compress(compilation).then((logs = []) => {
+        return Compress(compilation, { minSize }).then((logs = []) => {
           spinner.stop()
           logged && logs.forEach((v) => console.log(v))
         })

@@ -9,7 +9,7 @@ const { RawSource } = require('webpack-sources') // 处理webpack文件对象
 const { RandomNumInt, ByteSize, RoundNum } = require('../utils/index')
 const md5 = require('md5')
 
-// 伪造请求头，生成随机ip，避免请求数量限制6
+// 伪造请求头，生成随机ip，避免请求数量限制
 function randomHeader() {
   // 随机生成4位的ip
   const ip = new Array(4)
@@ -19,17 +19,17 @@ function randomHeader() {
   const index = RandomNumInt(0, 1)
   return {
     headers: {
+      'rejectUnauthorized': false,
       'Cache-Control': 'no-cache',
       'Content-Type': 'application/x-www-form-urlencoded',
       'Postman-Token': Date.now(),
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
       'X-Forwarded-For': ip,
-      'X-Real-Ip': ip
+      'X-Real-IP': ip
     },
     hostname: TINYIMG_URL[index],
     method: 'POST',
-    path: '/web/shrink',
-    rejectUnauthorized: false
+    path: '/backend/opt/shrink'
   }
 }
 
@@ -98,12 +98,9 @@ function cacheImgLocal(name, data) {
   })
 }
 
-async function useCache() {}
-
 // 压缩图片代码
 async function compressImg(assets, path) {
   try {
-    console.log('path--------', path)
     // assets用于表示webpack编译的资源文件的
     // 在assets对象中，key是文件的名加后缀，value是一个对象，里面包含source和size等属性（可枚举和不可枚举属性）
     // 图片经过对应的loader（file-loader）处理后，在assets对象中会生成'[path][name].[ext]'这样格式的key，也可以配置使用hash加密
@@ -165,9 +162,9 @@ async function compressImg(assets, path) {
  * @param  {[type]} compilation     [webpack 构建对象]
  * @return {Promise}                [返回Promise，参数为输出日志的数组]
  */
-module.exports = async (compilation) => {
+module.exports = async (compilation, opts = {}) => {
   // 从所有的资源文件中过滤出需要压缩的图片文件
-  const imgs = Object.keys(compilation.assets).filter((v) => IMG_REGEXP.test(v))
+  const imgs = Object.keys(compilation.assets).filter((v) => IMG_REGEXP.test(v) && compilation.assets[v].size() > opts.minSize)
   if (!imgs.length) return Promise.resolve()
   const promises = imgs.map((v) => compressImg(compilation.assets, v))
   let logs = await Promise.all(promises)

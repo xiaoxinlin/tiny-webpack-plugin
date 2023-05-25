@@ -8,6 +8,10 @@
 		"logged": {
 			"description": "print log",
 			"type": "boolean"
+		},
+		"minSize": {
+			"description": "tiny image min size",
+			"type": "number"
 		}
 	},
 	"additionalProperties": false
