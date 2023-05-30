@@ -6,6 +6,12 @@
 npm install @elin/tinyimg-webpack-plugin -D
 ```
 
+#### 参数说明
+- **logged** 是否显示日志
+- **enabled** 是否启用图片压缩
+- **minSize** 图片压缩的最小尺寸限制
+- **apiKey** tinyPNG的api key(可选)，不填则使用秘法上传，超过20张不稳定
+
 #### vue
 
 ```js

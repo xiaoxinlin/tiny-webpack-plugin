@@ -16,7 +16,7 @@ function randomHeader() {
     .fill(0)
     .map(() => parseInt(Math.random() * 255))
     .join('.')
-  const index = RandomNumInt(0, 1)
+  const index = Math.floor(Math.random() * 3) % 3
   return {
     headers: {
       'rejectUnauthorized': false,
@@ -33,10 +33,23 @@ function randomHeader() {
   }
 }
 
+function keyHeader(apiKey) {
+  const auth = Buffer.from('api:' + apiKey).toString('base64');
+  return {
+    headers: {
+      Authorization: 'Basic ' + auth,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
+    },
+    hostname: 'api.tinify.com',
+    method: 'POST',
+    path: '/shrink'
+  }
+}
+
 // 上传图片方法
-function uploadImg(file) {
+function uploadImg(file, apiKey) {
   // 生成http请求配置
-  const opts = randomHeader()
+  const opts = !apiKey ? randomHeader() : keyHeader(apiKey);
   return new Promise((resolve, reject) => {
     // 发起http请求
     // 发起请求，生成http.ClientRequest的可写流示例，用于处理请求事件、写入文件（传输）
@@ -99,7 +112,7 @@ function cacheImgLocal(name, data) {
 }
 
 // 压缩图片代码
-async function compressImg(assets, path) {
+async function compressImg(assets, path, apiKey) {
   try {
     // assets用于表示webpack编译的资源文件的
     // 在assets对象中，key是文件的名加后缀，value是一个对象，里面包含source和size等属性（可枚举和不可枚举属性）
@@ -127,7 +140,7 @@ async function compressImg(assets, path) {
       })
     }
     // 上传图片，获取接口响应对象obj
-    const obj = await uploadImg(file)
+    const obj = await uploadImg(file, apiKey)
     // 下载图片，获取下载的图片文件流
     const data = await downloadImg(obj.output.url)
     // RawSource，处理webpack文件对象的插件
@@ -166,7 +179,7 @@ module.exports = async (compilation, opts = {}) => {
   // 从所有的资源文件中过滤出需要压缩的图片文件
   const imgs = Object.keys(compilation.assets).filter((v) => IMG_REGEXP.test(v) && compilation.assets[v].size() > opts.minSize)
   if (!imgs.length) return Promise.resolve()
-  const promises = imgs.map((v) => compressImg(compilation.assets, v))
+  const promises = imgs.map((v) => compressImg(compilation.assets, v, opts.apiKey))
   let logs = await Promise.all(promises)
   return logs
 }

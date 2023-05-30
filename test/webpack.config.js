@@ -3,7 +3,6 @@ const BarPlugin = require('webpackbar')
 const CleanPlugin = require('clean-webpack-plugin').CleanWebpackPlugin
 const HtmlPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const Fibers = require('fibers')
 const Sass = require('sass')
 
 const TinyimgPlugin = require('../src')
@@ -31,7 +30,6 @@ const LOADER_OPTS = {
   minicss: { publicPath: '../' },
   sass: {
     implementation: Sass,
-    sassOptions: { fiber: Fibers }
   }
 }
 

@@ -12,6 +12,10 @@
 		"minSize": {
 			"description": "tiny image min size",
 			"type": "number"
+		},
+		"apiKey": {
+			"description": "tiny Api Key",
+			"type": "string"
 		}
 	},
 	"additionalProperties": false

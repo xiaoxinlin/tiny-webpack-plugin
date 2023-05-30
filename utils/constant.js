@@ -5,7 +5,7 @@ const PLUGIN_NAME = 'tinyimg-webpack-plugin'
 
 const CACHE_DIR = 'TINY_IMG_CACHE'
 
-const TINYIMG_URL = ['tinypng.com', 'tinyjpg.com']
+const TINYIMG_URL = ['tinypng.com', 'tinyjpg.com', 'tinify.cn']
 
 module.exports = {
   IMG_REGEXP,
